@@ -564,10 +564,9 @@
         }
     }
 
-    // Set default date to today minus 1 to ensure games have finished
-    const d = new Date();
-    d.setDate(d.getDate() );
-    document.getElementById('dateInput').valueAsDate = d;
+// Set default date to the current day
+const d = new Date();
+document.getElementById('dateInput').valueAsDate = d;
     
 </script>
 </body>
