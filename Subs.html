@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MLB Sub & Shift Analytics</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; color: #333; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { margin-top: 0; color: #002D72; border-bottom: 2px solid #ba0c2f; padding-bottom: 10px; }
+        .controls { margin: 20px 0; display: flex; gap: 10px; }
+        select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; flex-grow: 1; }
+        button { padding: 8px 16px; background: #ba0c2f; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #8e0a24; }
+        #status { font-size: 13px; color: #666; margin-bottom: 10px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; background: #eee; padding: 12px; font-size: 12px; }
+        td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: top; }
+        .player-header { font-weight: bold; font-size: 1.1em; color: #002D72; }
+        .stat-count { font-weight: bold; font-size: 14px; display: block; }
+        .sub-label { color: #ba0c2f; }
+        .shift-label { color: #e65100; }
+        .path-list { font-size: 12.5px; color: #444; margin: 0; padding-left: 0; list-style: none; }
+        .path-item { margin-bottom: 6px; border-left: 3px solid #002D72; padding-left: 10px; }
+        .shift-item { border-left: 3px solid #e65100; }
+        .pos-badge { font-weight: bold; font-family: monospace; background: #f0f0f0; padding: 1px 4px; border-radius: 3px; margin: 0 3px; }
+        .game-ref { color: #888; font-size: 11px; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>MLB Sub & Position Shift Tracker</h2>
+    <div class="controls">
+        <select id="teamSelect"><option>Loading MLB Teams...</option></select>
+        <button id="runBtn">Analyze Last 10 Games</button>
+    </div>
+    <div id="status">Ready.</div>
+    <div id="output"></div>
+</div>
+
+<script>
+const teamSelect = document.getElementById('teamSelect');
+const output = document.getElementById('output');
+const status = document.getElementById('status');
+
+async function init() {
+    try {
+        const r = await fetch('https://statsapi.mlb.com/api/v1/teams?sportId=1');
+        const d = await r.json();
+        teamSelect.innerHTML = d.teams.sort((a,b)=>a.name.localeCompare(b.name))
+            .map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    } catch(e) { status.textContent = "Error loading teams."; }
+}
+
+document.getElementById('runBtn').onclick = async () => {
+    const teamId = teamSelect.value;
+    output.innerHTML = '';
+    status.textContent = "Fetching Games...";
+    
+    const sReq = await fetch(`https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&sportId=1&season=2026&gameType=R`);
+    const sData = await sReq.json();
+    const games = (sData.dates || []).flatMap(d => d.games).filter(g => g.status.abstractGameState === 'Final').slice(-10);
+
+    if(!games.length) { status.textContent = "No games found."; return; }
+
+    const aggregated = {}; // { id: { name, subCount, shiftCount, logs: [] } }
+
+    for (const game of games) {
+        status.textContent = `Analyzing Game: ${game.gamePk}...`;
+        const bReq = await fetch(`https://statsapi.mlb.com/api/v1/game/${game.gamePk}/boxscore`);
+        const bData = await bReq.json();
+        const side = bData.teams.home.team.id == teamId ? 'home' : 'away';
+        const players = Object.values(bData.teams[side].players);
+        const opponent = bData.teams[side === 'home' ? 'away' : 'home'].team.name;
+        
+        const slots = {};
+        players.forEach(p => {
+            if (!p.battingOrder) return;
+            const slotRoot = p.battingOrder.substring(0, 1);
+            if (!slots[slotRoot]) slots[slotRoot] = [];
+            slots[slotRoot].push(p);
+        });
+
+        // Loop through the roster for this game
+        players.forEach(p => {
+            const id = p.person.id;
+            const positions = p.allPositions || [];
+            
+            // 1. Check for Position Shifts
+            if (positions.length > 1) {
+                if (!aggregated[id]) aggregated[id] = { name: p.person.fullName, subCount: 0, shiftCount: 0, logs: [] };
+                aggregated[id].shiftCount++;
+                aggregated[id].logs.push({
+                    type: 'SHIFT',
+                    path: positions.map(pos => pos.abbreviation).join(' ➔ '),
+                    opp: opponent,
+                    date: game.gameDate
+                });
+            }
+        });
+
+        // 2. Check for Substitution Paths
+        Object.values(slots).forEach(lineup => {
+            lineup.sort((a,b) => parseInt(a.battingOrder) - parseInt(b.battingOrder));
+            lineup.forEach((p, i) => {
+                if (i > 0) { // Entry detected
+                    const id = p.person.id;
+                    if (!aggregated[id]) aggregated[id] = { name: p.person.fullName, subCount: 0, shiftCount: 0, logs: [] };
+                    
+                    const prev = lineup[i-1];
+                    aggregated[id].subCount++;
+                    aggregated[id].logs.push({
+                        type: 'SUB',
+                        outName: prev.person.fullName,
+                        outPos: prev.position.abbreviation,
+                        inPos: p.position.abbreviation,
+                        opp: opponent,
+                        date: game.gameDate
+                    });
+                }
+            });
+        });
+    }
+
+    status.textContent = "Complete.";
+    const sorted = Object.values(aggregated).sort((a,b) => (b.subCount + b.shiftCount) - (a.subCount + a.shiftCount));
+
+    let html = `<table><thead><tr><th>Player</th><th>Counts</th><th>Tactical History (Last 15 Games)</th></tr></thead><tbody>`;
+    
+    sorted.forEach(p => {
+        html += `<tr>
+            <td><span class="player-header">${p.name}</span></td>
+            <td>
+                <span class="stat-count sub-label">Subs: ${p.subCount}</span>
+                <span class="stat-count shift-label">Shifts: ${p.shiftCount}</span>
+            </td>
+            <td>
+                <ul class="path-list">
+                    ${p.logs.map(log => {
+                        if (log.type === 'SUB') {
+                            return `<li class="path-item">
+                                Replaced <strong>${log.outName}</strong> 
+                                <span class="pos-badge">${log.outPos} ➔ ${log.inPos}</span>
+                                <span class="game-ref">vs ${log.opp} (${log.date})</span>
+                            </li>`;
+                        } else {
+                            return `<li class="path-item shift-item">
+                                <strong class="shift-label">Position Shift:</strong> 
+                                <span class="pos-badge">${log.path}</span>
+                                <span class="game-ref">vs ${log.opp} (${log.date})</span>
+                            </li>`;
+                        }
+                    }).join('')}
+                </ul>
+            </td>
+        </tr>`;
+    });
+
+    html += `</tbody></table>`;
+    output.innerHTML = html;
+};
+
+init();
+</script>
+</body>
+</html>
