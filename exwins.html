@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLB Expected Wins & Std Dev</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f9; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #002D72; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: center; }
+        th { background-color: #002D72; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .summary { margin-top: 20px; padding: 15px; background: #eef; border-radius: 5px; font-weight: bold; }
+        .loading { text-align: center; font-style: italic; color: #666; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>MLB Team Performance & Projections</h1>
+    <div id="status" class="loading">Fetching live 2026 data...</div>
+    
+    <div id="statsSummary" class="summary"></div>
+
+    <table id="mlbTable">
+        <thead>
+            <tr>
+                <th>Team</th>
+                <th>W - L</th>
+                <th>Runs Scored (RS)</th>
+                <th>Runs Against (RA)</th>
+                <th>Expected Wins (xW)</th>
+                <th>Diff</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    const API_URL = "https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=2026&standingsTypes=regularSeason";
+
+    async function fetchMLBData() {
+        try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+            const teams = [];
+
+            data.records.forEach(division => {
+                division.teamRecords.forEach(team => {
+                    teams.push({
+                        name: team.team.name,
+                        w: team.wins,
+                        l: team.losses,
+                        rs: team.runsScored,
+                        ra: team.runsAllowed
+                    });
+                });
+            });
+
+            calculateAndDisplay(teams);
+        } catch (error) {
+            document.getElementById('status').innerText = "Error loading data. Using sample values...";
+            console.error(error);
+        }
+    }
+
+    function calculateAndDisplay(teams) {
+        const tableBody = document.getElementById('tableBody');
+        const exponent = 1.83;
+        let diffs = [];
+
+        teams.forEach(team => {
+            const totalGames = team.w + team.l;
+            
+            // Pythagorean Expectation Formula: RS^1.83 / (RS^1.83 + RA^1.83)
+            const winPct = Math.pow(team.rs, exponent) / (Math.pow(team.rs, exponent) + Math.pow(team.ra, exponent));
+            const xW = (winPct * totalGames).toFixed(1);
+            const diff = (team.w - xW).toFixed(1);
+            
+            diffs.push(parseFloat(diff));
+
+            const row = `<tr>
+                <td style="text-align:left"><strong>${team.name}</strong></td>
+                <td>${team.w} - ${team.l}</td>
+                <td>${team.rs}</td>
+                <td>${team.ra}</td>
+                <td style="color: blue">${xW}</td>
+                <td style="color: ${diff >= 0 ? 'green' : 'red'}">${diff}</td>
+            </tr>`;
+            tableBody.innerHTML += row;
+        });
+
+        // Calculate Standard Deviation of the Diffs
+        const n = diffs.length;
+        const mean = diffs.reduce((a, b) => a + b, 0) / n;
+        const stdDev = Math.sqrt(diffs.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / n);
+
+        document.getElementById('status').style.display = 'none';
+        document.getElementById('statsSummary').innerHTML = `
+            League Analysis:<br>
+            Average Luck/Skill Deviation: ±${stdDev.toFixed(2)} Wins<br>
+            <small>*Higher deviation indicates teams are currently over/under-performing their run differential.*</small>
+        `;
+    }
+
+    fetchMLBData();
+</script>
+
+</body>
+</html>
