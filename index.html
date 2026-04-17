@@ -564,9 +564,15 @@
         }
     }
 
-// Set default date to the current day
-const d = new Date();
-document.getElementById('dateInput').valueAsDate = d;
+// Set default date to current Central Time (US)
+const centralDate = new Date().toLocaleString("en-US", {timeZone: "America/Chicago"});
+const d = new Date(centralDate);
+
+const year = d.getFullYear();
+const month = String(d.getMonth() + 1).padStart(2, '0');
+const day = String(d.getDate()).padStart(2, '0');
+
+document.getElementById('dateInput').value = `${year}-${month}-${day}`;
     
 </script>
 </body>
