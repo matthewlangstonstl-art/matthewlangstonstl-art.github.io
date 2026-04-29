@@ -1,79 +1,105 @@
-/* 1. Nuke everything and force the dark base */
+/* 1. RESET WITH CAUTION */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    background-color: transparent; /* Force transparency everywhere by default[cite: 1] */
 }
 
+/* 2. BASE THEME - Force dark mode on the roots[cite: 1] */
 html, body {
-    background-color: #0b1220 !important; /* The actual base layer[cite: 1] */
+    background-color: #0b1220 !important;
     color: #e2e8f0 !important;
     font-family: system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
 }
 
-/* 2. Lock the container so it can't bleed white[cite: 1] */
-.container, .card, .diagram-card {
-    background-color: #0b1220 !important;
+/* 3. LAYOUT - Restores horizontal alignment[cite: 1] */
+.container {
     max-width: 1200px;
     margin: auto;
     padding: 25px 20px;
+    display: block; /* Ensure it stays a block container */
 }
 
-/* 3. The Table Fix: Stop the white-out in the cells[cite: 1] */
+.diagram-row {
+    display: flex !important; /* Forces side-by-side back[cite: 1] */
+    gap: 20px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.diagram-card {
+    flex: 1;
+    min-width: 350px; /* Prevents them from getting too skinny before stacking[cite: 1] */
+    background-color: #020617 !important;
+    border: 1px solid #1f2937;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+/* 4. NAVBAR[cite: 1] */
+.navbar {
+    background: #020617;
+    padding: 15px 25px;
+    border-bottom: 1px solid #1f2937;
+    display: flex;
+    align-items: center;
+}
+
+.navbar a {
+    color: #94a3b8;
+    margin-right: 20px;
+    text-decoration: none;
+}
+
+/* 5. TABLE FIX - Force transparency at the cell level[cite: 1] */
 table {
     width: 100%;
     border-collapse: collapse;
-    background-color: #020617 !important; /* Dark base for the table[cite: 1] */
+    margin-top: 15px;
+    background-color: #020617 !important;
 }
 
-/* Kill cell background inheritance entirely[cite: 1] */
+/* LOCK CELLS TO TRANSPARENT - This stops the white-out[cite: 1] */
 td, th {
-    background-color: transparent !important; 
+    background-color: transparent !important;
     border-bottom: 1px solid #1f2937;
     padding: 10px;
-    color: #e2e8f0 !important;
 }
 
 th {
     color: #38bdf8 !important;
-    font-weight: bold;
     text-align: left;
 }
 
-/* 4. Apply the row colors directly to the TR[cite: 1] */
-tr:nth-child(even) {
-    background-color: #020617 !important;
-}
+/* 6. ROW COLORS - High priority lock[cite: 1] */
+tr:nth-child(even) { background-color: #020617 !important; }
+tr:nth-child(odd) { background-color: #0b1220 !important; }
+tr:hover { background-color: #1e293b !important; }
 
-tr:nth-child(odd) {
-    background-color: #0b1220 !important;
-}
-
-tr:hover {
-    background-color: #1e293b !important;
-}
-
-/* 5. Specific Column & Team Colors (Fixes Lineup Visibility)[cite: 1] */
+/* 7. DATA & TEAM COLORS[cite: 1] */
 .away-col, .away-text { color: #f87171 !important; }
 .home-col, .home-text { color: #60a5fa !important; }
+.out-of-pos { color: #facc15 !important; }
 
-/* The specific Red/Blue headers for the Lineups[cite: 1] */
-.away-team-header { background-color: #c41e3a !important; color: #ffffff !important; }
-.home-team-header { background-color: #0060a5 !important; color: #ffffff !important; }
+/* Specific Lineup Headers[cite: 1] */
+.away-team-header { background-color: #c41e3a !important; color: white !important; }
+.home-team-header { background-color: #0060a5 !important; color: white !important; }
 
-/* 6. Form elements and status tags[cite: 1] */
+/* 8. TAGS & FORM ELEMENTS[cite: 1] */
+.lucky {
+    background-color: #064e3b !important;
+    color: #6ee7b7 !important;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.75rem;
+}
+
 input, select {
     background-color: #020617 !important;
     border: 1px solid #334155;
     color: #e2e8f0 !important;
     padding: 8px;
-}
-
-.lucky {
-    background-color: #064e3b !important;
-    color: #6ee7b7 !important;
-    padding: 2px 10px;
-    border-radius: 4px;
-    font-weight: bold;
+    border-radius: 6px;
 }
