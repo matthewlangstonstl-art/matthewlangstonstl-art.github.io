@@ -1,25 +1,27 @@
-/* RESET & BASE STYLES */
-*{
+/* GLOBAL RESET */
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* FORCE DARK THEME ON BODY AND CONTAINERS */
 body {
     font-family: system-ui, -apple-system, sans-serif;
-    background: #0b1220; /* Deep navy background[cite: 1] */
-    color: #e2e8f0;      /* Light gray text for readability[cite: 1] */
+    background-color: #0b1220 !important; /* Forces dark background[cite: 1] */
+    color: #e2e8f0;
     line-height: 1.5;
 }
 
-/* CONTAINERS */
+/* FIX FOR THE WHITE HEADER AREA SHOWN IN SCREENSHOT 1 */
 .container {
     max-width: 1200px;
     margin: auto;
     padding: 25px 20px;
-    background: #0b1220; /* Prevents "whitening out" of the main section[cite: 1] */
+    background-color: #0b1220 !important; 
 }
 
+/* NAVBAR STYLING[cite: 1] */
 .navbar {
     background: #020617;
     padding: 15px 25px;
@@ -32,93 +34,70 @@ body {
     text-decoration: none;
 }
 
-.navbar a:hover {
-    color: #38bdf8;
-}
-
-/* TYPOGRAPHY */
-h1 {
-    font-size: 1.8rem;
-    margin-bottom: 10px;
-    color: #f1f5f9; /* High contrast header[cite: 1] */
-}
-
-.section-title {
-    margin-top: 35px;
-    margin-bottom: 10px;
-    font-size: 1.1rem;
-    color: #38bdf8;
-}
-
-/* CARDS & TABLES */
-.card {
-    background: #020617;
-    border: 1px solid #1f2937;
-    border-radius: 8px;
-    padding: 18px;
-    margin-bottom: 20px;
-}
-
+/* TABLE FIXES - This stops the "whiting out" of columns[cite: 1] */
 table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
     font-size: 0.9rem;
-    background: #020617; /* Dark table base[cite: 1] */
-    color: #e2e8f0;
+    background-color: #020617 !important; /* Locks background[cite: 1] */
 }
 
 th {
-    background: #020617;
+    background-color: #020617 !important;
     color: #38bdf8;
-    padding: 12px 10px;
+    padding: 10px;
     text-align: left;
     border-bottom: 2px solid #1f2937;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
 }
 
+/* SPECIFIC FIX FOR PROJECTED 162 COLUMN AND STRIPING[cite: 1] */
 td {
     padding: 10px;
     border-bottom: 1px solid #1f2937;
+    background-color: inherit !important; /* Prevents cells from turning white[cite: 1] */
+    color: #e2e8f0;
 }
 
-/* ROW STRIPING & HOVER - Fixed to prevent white inheritance[cite: 1] */
-tr:nth-child(even) { background: #020617; }
-tr:nth-child(odd) { background: #0b1220; }
+tr:nth-child(even) {
+    background-color: #020617 !important;
+}
 
+tr:nth-child(odd) {
+    background-color: #0b1220 !important;
+}
+
+/* PREVENT HOVER FROM TURNING WHITE */
 tr:hover {
-    background: #1e293b !important;
+    background-color: #1e293b !important;
 }
 
-/* SPECIFIC COLUMN OVERRIDES (Fixes Screenshot Issues) */
-/* This ensures the "Projected 162" column stays dark[cite: 1] */
-td:nth-child(7), .proj-col {
-    background: inherit; 
-    font-weight: 600;
-    color: #60a5fa; /* Light blue for projections */
-}
-
-/* STATUS TAGS */
-.lucky {
-    background: #064e3b; /* Dark emerald */
-    color: #6ee7b7;      /* Mint text */
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: bold;
-}
-
-/* COLOR CLASSES FOR DATA[cite: 1] */
+/* DATA COLORING FROM YOUR SOURCE[cite: 1] */
 .away-col { color: #f87171; }
 .home-col { color: #60a5fa; }
 .out-of-pos { color: #facc15; }
-.diff-pos { color: #4ade80; } /* Green for positive diff */
-.diff-neg { color: #f87171; } /* Red for negative diff */
 
-/* FORM ELEMENTS */
+/* STATUS BADGES FIX (As seen in Screenshot 1)[cite: 1] */
+.lucky {
+    background-color: #064e3b !important; /* Dark green background */
+    color: #6ee7b7 !important;           /* Mint text */
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+/* FORM ELEMENTS[cite: 1] */
+input, select {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #334155;
+    background-color: #020617 !important;
+    color: #e2e8f0;
+}
+
 button {
-    background: #2563eb;
+    background-color: #2563eb;
     color: white;
     border: none;
     padding: 10px 16px;
@@ -126,31 +105,11 @@ button {
     cursor: pointer;
 }
 
-button:hover {
-    background: #1d4ed8;
-}
-
-input, select {
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #334155;
-    background: #020617;
-    color: #e2e8f0;
-    margin-right: 10px;
-}
-
-/* DIAGRAMS & GRID */
-.diagram-row {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.diagram-card {
-    flex: 1;
-    min-width: 300px;
-    background: #020617;
+/* LAYOUT CARDS[cite: 1] */
+.card, .diagram-card {
+    background-color: #020617 !important;
     border: 1px solid #1f2937;
     border-radius: 8px;
-    padding: 10px;
+    padding: 18px;
+    margin-bottom: 20px;
 }
